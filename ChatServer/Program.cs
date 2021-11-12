@@ -15,7 +15,7 @@ namespace ChatServer
         static List<Connection> connections = new List<Connection>();
         static void Main(string[] args)
         {
-            var server = new Fleck.WebSocketServer("ws://0.0.0.0:8000");
+            var server = new Fleck.WebSocketServer("ws://0.0.0.0:1919");
             server.Start(socket =>
             {
                 socket.OnOpen  = () => OnOpen(socket);
@@ -36,12 +36,18 @@ namespace ChatServer
 
         static async void OnOpen(IWebSocketConnection socket)
         {
+            var info = socket.ConnectionInfo;
+            Console.WriteLine(info.Path);
+            var query = info.Path.Split('?')[1];
+            string name = string.Empty;
+            if(query.Split('=')[0] == "name")name=query.Split('=')[1];
+            string roomName = info.Path.Split('?')[0].Replace("/","");
             lock (lockObj)
             {
-                connections.Add(new Connection(){socket=socket});
+                connections.Add(new Connection(){socket=socket, room=roomName, name=name});
             }
-            var info = socket.ConnectionInfo;
-            Console.WriteLine($"Open: {info.ClientIpAddress} {info.ClientPort}");
+            
+            Console.WriteLine($"Open: {info.ClientIpAddress} {info.ClientPort} RoomName: {roomName} UserName: {name}");
             
         }
         static void OnClose(IWebSocketConnection socket)
@@ -58,25 +64,11 @@ namespace ChatServer
             var info = socket.ConnectionInfo;
             Console.WriteLine($"Received from {info.ClientIpAddress} {info.ClientPort}: {message}");
             var connection = connections.Where(c => c.socket==socket).First();
-            if(connection.room == null)
-            {
-                var room = JsonSerializer.Deserialize<Room>(message);
-                if(room.roomName == null)return;
-                connection.room = room.roomName;
-            }
-            else if(connection.name == null)
-            {
-                var connectionName = JsonSerializer.Deserialize<ConnectionName>(message);
-                if(connectionName.name == null)return;
-                connection.name = connectionName.name;
-            }
-            else
-            {
-                var chatMessage = JsonSerializer.Deserialize<ChatMessage>(message);
-                if(chatMessage.message == null)return;
-                chatMessage.fromName = connection.name;
-                SendMessageToRoom(connection.room,chatMessage);
-            }
+            var chatMessage = JsonSerializer.Deserialize<ChatMessage>(message);
+            if(chatMessage.message == null)return;
+            chatMessage.fromName = connection.name;
+            SendMessageToRoom(connection.room,chatMessage);
+            
         }
         static void SendMessageToRoom(string targetRoom, ChatMessage message)
         {
