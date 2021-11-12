@@ -15,7 +15,7 @@ namespace ChatServer
         static List<Connection> connections = new List<Connection>();
         static void Main(string[] args)
         {
-            var server = new Fleck.WebSocketServer("ws://0.0.0.0:1919");
+            var server = new Fleck.WebSocketServer("ws://0.0.0.0:8000");
             server.Start(socket =>
             {
                 socket.OnOpen  = () => OnOpen(socket);
