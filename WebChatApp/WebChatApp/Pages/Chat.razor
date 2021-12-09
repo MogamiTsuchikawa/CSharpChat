@@ -1,0 +1,34 @@
+﻿@page "/chat"
+
+<PageTitle>ﾁｬｯﾄﾍﾟｰｼﾞ</PageTitle>
+
+<h1>ｼｰｼｬｰﾌﾟdeﾁｬｯﾄｯ★</h1>
+@if (isConected)
+{
+    <h3>接続済:@inputRoomName</h3>
+    <br />
+    <input type="text" @bind-value="inputMsgText" @bind-value:event="oninput" />
+    <button @onclick="OnClickPostMsgBtn">投稿</button>
+}
+else
+{
+    <p>ユーザー名</p>
+    <input type="text" @bind-value="inputUserName" @bind-value:event="oninput"/>
+    <p>部屋名</p>
+    <input type="text" @bind-value="inputRoomName" @bind-value:event="oninput"/>
+    <button @onclick="OnClickConnectBtn">接続</button>
+}
+
+
+@code{
+    private bool isConected = false;
+    private string inputUserName = "", inputRoomName = "", inputMsgText = "";
+    private void OnClickConnectBtn()
+    {
+        isConected = true;
+    }
+    private void OnClickPostMsgBtn()
+    {
+        inputMsgText = "";
+    }
+}
